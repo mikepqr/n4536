@@ -68,12 +68,8 @@ import profiles
 
 
 TELESCOPE_PA_FILENAME = "telescope_pa.dat"
-GALAXY_INFO_FILENAME = "galaxy_info.txt"
-
-POS_ROOTNAME = "galaxycenter_"
-
+INFO_ROOTNAME = "galaxyinfo_"
 HEADER_LINE1 = "# Profile generated via iraf task pvector (%s):\n"
-
 
 class DummyOptions( object ):
 	pass
@@ -117,40 +113,26 @@ def GetDataLines( filename ):
 
 
 
-def GetGalaxyInfo( currentDir="./", getExtraInfo=False ):
-	"""Extract useful information about a galaxy -- currently its full
-	name, the official shortened name, and its R_25 size -- from a file
-	named "galaxy_info.txt".
-	"""
-	dlines = GetDataLines(GALAXY_INFO_FILENAME)
-	pp = dlines[0].split()
-	galaxyFullName = pp[0]
-	galaxyShortName = pp[1]
-	galaxyRadius = float(pp[2])
-	if (getExtraInfo is True) and (len(pp) > 3):
-		ellipticity = float(pp[3])
-		diskPA = float(pp[4])
-		return (galaxyFullName, galaxyShortName, galaxyRadius, ellipticity, diskPA)
-	return (galaxyFullName, galaxyShortName, galaxyRadius)
-
-
-def GetGalaxyCenter( positionFilename, imageFilename ):
-	"""Extract coordinates for galaxy center (x.y) from positionFilename,
+def GetGalaxyInfo(infoFileName):
+	"""Extract coordinates for galaxy center (x.y) from infoFileName,
 	given the image name.  Assumes that positionFilename has lines formatted
 	like this:
-	someImageFilename   x_coord   y_coord
+	x_coord   y_coord   PA   telPA
 	"""
 
-	dlines = GetDataLines(positionFilename)
-	for line in dlines:
-		pp = line.split()
-		if (len(pp) >= 3):
-			fname = pp[0].rstrip(":")
-			if (fname == imageFilename):
-				return (float(pp[1]), float(pp[2]))
+	dlines = GetDataLines(infoFileName)
+
+	if len(dlines) == 1:
+		pp = dlines[0].split()
+		if len(pp) == 2:
+			return (float(pp[0]), float(pp[1]), 0., 0.)
+		if len(pp) == 3:
+			return (float(pp[0]), float(pp[1]), float(pp[2]), 0.)
+		if len(pp) == 4:
+			return (float(pp[0]), float(pp[1]), float(pp[2]), float(pp[3]))
 
 	# only get here if we can't find image filename
-	print "\n*** GetGalaxyCenter: can't find coordinates for image file \"%s\"!\n" % imageFilename
+	print "\n*** GetGalaxyInfo: can't find info for image file \"%s\"!\n" % infoFileName
 	return None, None
 
 
@@ -259,81 +241,27 @@ def MakeOutputRoot( options, pa_str, shortName ):
 
 
 
-def GetMultipleProfiles( options ):
-	"""Given an input profile-specifications file (options.inputFile), generate
-	pvect profiles, one for each line in the profile-spec file.
-	The profile-spec file should have lines with the following format:
-
-	nickname: image_filename, PA, radius(pix), width, output_filename [, other, ...]
-
-	(entries should be comman and/or whitespace separated)
-	nickname and anything after output_filename are ignored (but may be useful elsewhere).
-	"""
-
-	dlines = GetDataLines(options.inputFile)
-	for line in dlines:
-		pp = line.replace(",", " ").strip().split()
-		imageFilename = pp[1]
-
-		(galaxyName, shortName, galaxyRadius, ell, galaxyPA) = GetGalaxyInfo(getExtraInfo=True)
-
-		pa_str = pp[2]
-		if (pa_str in ["major", "Major", "MAJOR"]):
-			options.skyPA = galaxyPA
-		else:
-			options.skyPA = float(pa_str)
-		telPADict = GetTelescopePA()
-		if telPADict is None:
-			telPA = 0.0
-		else:
-			telPA = telPADict[imageFilename]
-		options.imagePA = angles.SkyAngleToImageAngle(telPA, options.skyPA)
-
-		posFileName = POS_ROOTNAME + galaxyName + ".dat"
-		options.xCenter, options.yCenter = GetGalaxyCenter(posFileName, imageFilename)
-
-		radius = float(pp[3])
-		options.widths = [float(pp[4])]
-		options.outputName = pp[5]
-		paString = "pa%.1f" % options.skyPA
-		outputRoot = MakeOutputRoot(options, paString, None)
-
-		GetAndSaveProfiles(options, imageFilename, radius, outputRoot)
-		if options.getPerpendicular:
-			paString = "pa%.1f" % (options.skyPA + 90.0)
-			outputRoot = MakeOutputRoot(options, paString, None)
-			options.imagePA += 90.0
-			GetAndSaveProfiles(options, imageFilename, radius, outputRoot)
-
-
-
 def main(argv=None):
 
-	usageString = "%prog <image-filename> <radius(pixels)> [options]\n"
-	usageString += "OR: %prog --inputfile <input_specifications_file> [options]\n"
-	usageString += "\n\tAssumes the existence of the following text file in the same directory:\n"
-	usageString += "\t   telescope_pa.dat [output of IRAF task \"north\"]\n"
-	usageString += "\t   galaxy_info.txt [includes full and short names of galaxy]\n"
-	usageString += "\t   galaxycenter_<fullname>.txt [lists image names and x,y centroids of galaxy]\n"
-	usageString += "\t   (if no telescope_pa.dat file exists, then images are assumed to have standard orientation)\n"
+	usageString = "%prog <image-filename>.fits <radius(pixels)> [options]\n"
+	usageString += "\nAssumes the existence of galaxyinfo_<image-filename>.dat in the\n"
+	usageString += "same directory. File should contain x0 y0 skyPA telPA on single line.\n"
+	usageString += "x0, y0 compulsory. skyPA and telPA optional (assumed 0 if not present).\n"
+	usageString += "telPA is output or IRAF north task. 0 = north up, east left, i.e. standard orientation\n"
+	usageString += "x0, y0, skyPA and telPA may be overriden by command line\n"
 	parser = optparse.OptionParser(usage=usageString, version="%prog ")
 
-
-# 	parser.add_option("-t", "--turnon", action="store_true", dest="turnon",
-# 					  default=False, help="set this option to True")
-	parser.add_option("--inputfile", type="str", dest="inputFile", default=None,
-						help="input specifications file")
 	parser.add_option("--output", "-o", type="str", dest="outputName", default=None,
-						help="root name for output files (e.g. 'n1300rss'; default = 'pvect')")
-	htext = "position angle of profile (on sky); default=major-axis (from 'galaxy_info.txt' file)"
+						help="root name for output files (e.g. 'n1300rss'; default = 'pvect_<image-filename>_')")
+	htext = "position angle of profile (on sky); default=taken from galaxyinfo_<image-filename>.dat"
 	parser.add_option("--skyPA", type="float", dest="skyPA", default=None,
 						help=htext)
 	parser.add_option("--imagePA", type="float", dest="imagePA", default=None,
 						help="position angle of profile (on image)")
 	parser.add_option("--xc", type="float", dest="xCenter", default=None,
-						help="x-coordinate of galaxy center (overrides galaxycenter file)")
+						help="x-coordinate of galaxy center (overrides galaxyinfo)")
 	parser.add_option("--yc", type="float", dest="yCenter", default=None,
-						help="y-coordinate of galaxy center (overrides galaxycenter file)")
+						help="y-coordinate of galaxy center (overrides galaxyinfo)")
 	htext = "width of profile in pixels; can be used multiple times to build up list"
 	htext += " (default is list of [1,3,5])"
 	parser.add_option("--width", type="float", dest="widths", action="append",
@@ -351,13 +279,6 @@ def main(argv=None):
 	# args[0] = name program was called with
 	# args[1] = first actual argument, etc.
 
-
-	# Special mode for using input file
-	if options.inputFile is not None:
-		GetMultipleProfiles(options)
-		return 0
-
-
 	# Regular mode (no input profile-specification files)
 	if (len(args) < 3):
 		print "You must supply an image filename and a radius!\n"
@@ -366,28 +287,23 @@ def main(argv=None):
 		imageFilename = args[1]
 		radius = int(args[2])
 
-	(galaxyName, shortName, galaxyRadius, ell, galaxyPA) = GetGalaxyInfo(getExtraInfo=True)
-	# determine angle on the image
+	galaxyName = os.path.splitext(imageFilename)[0]
+	shortName = galaxyName
+
+	infoFileName = INFO_ROOTNAME + galaxyName + ".dat"
+	(x0, y0, galaxyPA, telPA) = GetGalaxyInfo(infoFileName)
+
+	if (options.xCenter is None) and (options.yCenter is None):
+		options.xCenter, options.yCenter = x0, y0
+
+	# If no PA on command line
 	if options.skyPA is None and options.imagePA is None:
-		# user didn't specify a PA, so get the major-axis PA from galaxy_info.txt
+		# user didn't specify a PA, so get sky PA from info file
 		options.skyPA = galaxyPA
 
 	if options.skyPA is not None:
-		# user requested sky PA; convert to image PA
-		telPADict = GetTelescopePA()
-		if telPADict is None:
-			telPA = 0.0
-		else:
-			telPA = telPADict[imageFilename]
+		# using sky PA from file or user requested sky PA; convert to image PA
 		options.imagePA = angles.SkyAngleToImageAngle(telPA, options.skyPA)
-
-	# Determine galaxy center:
-	if (options.xCenter is None) and (options.yCenter is None):
-		posFileName = POS_ROOTNAME + galaxyName + ".dat"
-		(x0, y0) = GetGalaxyCenter(posFileName, imageFilename)
-		if (x0, y0) == (None, None):
-			return -1
-		options.xCenter, options.yCenter = x0, y0
 
 	# determine width or widths of profiles
 	if options.widths is None:
