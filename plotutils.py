@@ -336,7 +336,7 @@ def PlotFit( xVals, yDataVals, fitFuncList, fitParamList, x_fitted=None, y_fitte
 	if (residrange is not None):
 		plt.ylim(residrange[0], residrange[1])
 
-	plt.xlabel("Radius [arc sec]")
+	plt.xlabel("Radius [arcsec]")
 	plt.ylabel(ylabel2)
 	
 	
