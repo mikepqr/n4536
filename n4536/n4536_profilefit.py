@@ -4,6 +4,7 @@ import pylab as p
 import profiles, imfit, plotutils
 import concatenate_nicmos_sings
 
+d = os.path.expanduser("~/research/2012/smbhpb/data/n4536/profilefit_tinybulge/")
 d = os.path.expanduser("~/research/2012/smbhpb/data/n4536/profilefit/")
 exe = os.path.expanduser("~/research/2012/smbhpb/code/imfit/profilefit")
 datfile = d + "n4536_nicmosirac1_pa120.0_w1.dat"

@@ -13,7 +13,7 @@ outer = 90.
 def concatenate_nicmos_sings():
     d = os.path.expanduser("~/research/2012/smbhpb/data/n4536/cuts/")
     h = """# Major axis (PA = 120) cut of n4536. SBs in 2MASS K mag/arcsec2. Formed by
-    # concatenating NICMOS and IRAC1 cuts at r = %g arcsec. Masked r < %g, r > %g""" % (merge_radius, inner, outer)
+# concatenating NICMOS and IRAC1 cuts at r = %g arcsec. Masked r < %g, r > %g""" % (merge_radius, inner, outer)
 
     r_nicmos, c_nicmos = profiles.ReadAndFoldProfile(d + "n4536_nicmos_pa120.0_w1.dat", pix = 0.075)
     r_irac1, c_irac1 = profiles.ReadAndFoldProfile(d + "n4536_irac1_pa120.0_w1.dat", pix = 0.75)
@@ -49,4 +49,4 @@ def concatenate_nicmos_sings():
     p.show()
 
 if __name__ == "__main__":
-    main()
+    concatenate_nicmos_sings()

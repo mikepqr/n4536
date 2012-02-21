@@ -107,7 +107,10 @@ def GetOffsetPosition( options, majorAxisPA, r, mode="parallel" ):
 
 
 def GetDataLines( filename ):
-	lines = open(filename).readlines()
+    if os.path.isfile(filename): 
+        lines = open(filename).readlines()
+    else:
+        return None
 	dlines = [ line for line in lines if line[0] != "#" and len(line) > 1 ]
 	return dlines
 
@@ -122,6 +125,9 @@ def GetGalaxyInfo(infoFileName):
 
 	dlines = GetDataLines(infoFileName)
 
+	if dlines == None:
+		return None, None, 0., 0.
+
 	if len(dlines) == 1:
 		pp = dlines[0].split()
 		if len(pp) == 2:
@@ -133,7 +139,7 @@ def GetGalaxyInfo(infoFileName):
 
 	# only get here if we can't find image filename
 	print "\n*** GetGalaxyInfo: can't find info for image file \"%s\"!\n" % infoFileName
-	return None, None
+	return None, None, 0., 0.
 
 
 def GetTelescopePA():

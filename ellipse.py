@@ -677,7 +677,7 @@ def PlotEllPA( efit, xlog=False, xrange=None, parange=None, erange=None,
 # 		ax1.set_xticks([])
 
 	else:
-		p.subplot(211)
+		ax1 = p.subplot(211)
 		if not plotList:
 			PlotValsErrors(efit, "pa", xlog=xlog, xmark=xmark, ymark=pamark, flipPA=flipPA)
 		else:
@@ -691,7 +691,7 @@ def PlotEllPA( efit, xlog=False, xrange=None, parange=None, erange=None,
 			p.ylim(parange[0], parange[1])
 		if maintitle is not None:
 			p.title(maintitle)
-		p.subplot(212)
+		ax2 = p.subplot(212)
 		if not plotList:
 			PlotValsErrors(efit, "ellip", xlog=xlog, xmark=xmark, ymark=ellmark)
 		else:
@@ -704,6 +704,8 @@ def PlotEllPA( efit, xlog=False, xrange=None, parange=None, erange=None,
 			p.ylim(erange[0], erange[1])
 		p.ylabel(r"Ellipticity = $1 - b/a$")
 		p.xlabel(xtitle)
+
+        return (ax1, ax2)
 	
 
 def PlotHigher( efit, m=4, xlog=False, xrange=None, arange=None, brange=None,
