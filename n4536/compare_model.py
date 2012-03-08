@@ -53,6 +53,14 @@ def compare_model(d = "~/research/2012/smbhpb/data/n4536/profilefit/"):
     r_irac_minus_bulge, c_irac_minus_bulge = profiles.ReadAndFoldProfile(\
             d + "n4536_irac_minus_bulge" + pvect_suffix, pix = pix_irac)
 
+    cmd = " ".join([exe, "n4536_irac_minus_disk.fits", str(l), \
+            "--output=" + "n4536_irac_minus_disk", "--width=1", \
+            "--skyPA=" + str(pa), "--xc="+str(xc), "--yc="+str(yc)])
+    print cmd
+    subprocess.call(cmd, shell=True)
+    r_irac_minus_disk, c_irac_minus_disk = profiles.ReadAndFoldProfile(\
+            d + "n4536_irac_minus_disk" + pvect_suffix, pix = pix_irac)
+
     p.figure(0)
     p.clf()
     p.suptitle("Cuts through image and conceputal model at sky PA = %g degrees" % pa)
@@ -62,7 +70,8 @@ def compare_model(d = "~/research/2012/smbhpb/data/n4536/profilefit/"):
     d, = p.loglog(r_bulge, c_bulge, color = "Red")
     e, = p.loglog(r_conceptual, c_conceptual, color = "Black")
     f, = p.loglog(r_irac_minus_bulge, c_irac_minus_bulge, "o", color = "Blue")
+    g, = p.loglog(r_irac_minus_disk, c_irac_minus_disk, "o", color = "Red")
     p.ylabel("IRAC counts")
     p.xlabel("Radius [arcsec]")
-    p.legend([a,b,c,d,e,f], ["IRAC", "NICMOS", "Disk model", "Bulge model", "Total model", "IRAC - bulge model"])
+    p.legend([a,b,c,d,e,f,g], ["IRAC", "NICMOS", "Disk model", "Bulge model", "Total model", "IRAC - bulge model", "IRAC - disk model"])
     p.show()
