@@ -679,7 +679,7 @@ def PlotEllPA( efit, xlog=False, xrange=None, parange=None, erange=None,
 	else:
 		ax1 = p.subplot(211)
 		if not plotList:
-			PlotValsErrors(efit, "pa", xlog=xlog, xmark=xmark, ymark=pamark, flipPA=flipPA)
+			PlotValsErrors(efit, "pa", xlog=xlog, xmark=xmark, ymark=pamark, flipPA=flipPA, plotColor=plotColorList[0])
 		else:
 			for i in range(nEfits):
 				PlotValsErrors(efit[i], "pa", xlog=xlog, xmark=xmark, ymark=pamark, flipPA=flipPA,
@@ -693,7 +693,7 @@ def PlotEllPA( efit, xlog=False, xrange=None, parange=None, erange=None,
 			p.title(maintitle)
 		ax2 = p.subplot(212)
 		if not plotList:
-			PlotValsErrors(efit, "ellip", xlog=xlog, xmark=xmark, ymark=ellmark)
+			PlotValsErrors(efit, "ellip", xlog=xlog, xmark=xmark, ymark=ellmark, plotColor=plotColorList[0])
 		else:
 			for i in range(nEfits):
 				PlotValsErrors(efit[i], "ellip", xlog=xlog, xmark=xmark, ymark=ellmark,
@@ -1070,7 +1070,7 @@ def ConvertIrafToBender( irafEfit, dataFrame=True ):
 	irafColnames = irafEfit.colNames
 	nPts = len(a)
 	
-	irafDict = {}
+	benderDict = {}
 	benderDict['a'] = irafEfit['a']
 	benderDict['b'] = a * (1.0 - ell)
 	benderDict['sb'] = irafEfit['sb']
