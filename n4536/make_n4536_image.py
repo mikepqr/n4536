@@ -52,8 +52,12 @@ def make_n4536_image_nicmos(d = "~/research/2012/smbhpb/data/n4536/profilefit/",
 
     # Subtract bulge from NICMOS image and save
     nicmos = pyfits.open(refimage)
-    conceptual = pyfits.open(output_root + ".fits")
     bulge = pyfits.open(output_root + "1_Sersic.fits")
-    disk = pyfits.open(output_root + "2_Exponential.fits")
     nicmos[0].data = nicmos[0].data - bulge[0].data
     nicmos.writeto(d + "n4536_nicmos_minus_bulge.fits", clobber = True)
+
+    # Subtract disk from nicmos image and save
+    nicmos = pyfits.open(refimage)
+    disk = pyfits.open(output_root + "2_Exponential.fits")
+    nicmos[0].data -= disk[0].data
+    nicmos.writeto(d + "n4536_nicmos_minus_disk.fit", clobber = True)
