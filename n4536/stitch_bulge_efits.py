@@ -15,6 +15,7 @@ ell_transition_radius = 6.
 flux_transition_radius = 15.
 fitrange = [2., 18.]
 replacement_ell = 0.5
+replacement_b4 = 0.0
 d = "/Users/mike/research/2012/smbhpb/data/n4536/profilefit/"
 el_bulge_bender_file = "el_n4536_bulge.bender"
 
@@ -28,6 +29,7 @@ el_sinfoni_100comb = ellipse.ReadEllipse("/Users/mike/research/2012/smbhpb/data/
 el_irac_minus_disk_replaced = copy.deepcopy(el_irac_minus_disk)
 ii = el_irac_minus_disk['sma'] > ell_transition_radius
 el_irac_minus_disk_replaced['ellip'][ii] = replacement_ell
+el_irac_minus_disk_replaced['b4'][ii] = replacement_b4
 
 # Replace IRAC flux with extrapolation beyond transition radius #2
 # Assemble coordinates for fitting
